@@ -20,9 +20,11 @@ DEBUG = os.environ['DJANGO_DEBUG_MODE']
 
 ALLOWED_HOSTS = [os.environ['DJANGO_HOST']]
 
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
+# CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = False
+
+API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
 
 # Application definition
 
@@ -35,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    "rest_framework_api_key",
     'products',
     'users',
 ]
@@ -73,6 +76,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
         'rest_framework.permissions.AllowAny',
+        "rest_framework_api_key.permissions.HasAPIKey",
     ]
 }
 
