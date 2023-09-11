@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     "rest_framework_api_key",
+    'rest_framework_simplejwt',
     'products',
     'users',
 ]
@@ -77,7 +78,10 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
         'rest_framework.permissions.AllowAny',
         "rest_framework_api_key.permissions.HasAPIKey",
-    ]
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
 }
 
 CORS_ALLOWED_ORIGINS = [
@@ -120,7 +124,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'es-ES'
+LANGUAGE_CODE = 'en-US'
 
 TIME_ZONE = 'UTC'
 

@@ -1,18 +1,18 @@
 import json
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from rest_framework_api_key.permissions import HasAPIKey
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Group, User
-from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse
 from django.core.serializers import serialize
 
-# Create your views here.
+
 @api_view(['POST',])
-@permission_classes((AllowAny,))
+@permission_classes([AllowAny, HasAPIKey])
 def create_user_client( request ):
     if ( request.body ):
 
@@ -51,25 +51,22 @@ def create_user_client( request ):
         return JsonResponse({"error": "no data body"},status=500)
 
 @api_view(['POST'])
-@permission_classes((AllowAny,))
+@permission_classes([AllowAny, HasAPIKey])
 def login_user(request):
-    if ( request.body ):
+    if request.body:
         data = json.loads(request.body)
         email = data.get('email')
         password = data.get('password')
 
-        if email is None:
-            return JsonResponse({"errors": {"detail": "Please enter username"}}, status=400)
-        elif password is None:
-            return JsonResponse({"errors": {"detail": "Please enter password"}}, status=400)
+        if email is None or password is None:
+            return JsonResponse({"errors": {"detail": "Please enter both email and password"}}, status=400)
 
-        # user_object = User.objects.get(email=email)
-        user_object = User.objects.filter(email=email)
-        
-        if ( user_object.count() > 0) :
-            user_name = user_object[0].username
+        user_object = User.objects.filter(email=email).first()
 
-            # authentication user
+        if user_object is not None:
+            user_name = user_object.username
+
+            # Autenticar al usuario
             user = authenticate(username=user_name, password=password)
             if user is not None:
                 login(request, user)
@@ -77,15 +74,21 @@ def login_user(request):
                 data_serialized = serialize("json", data)
                 data_serialized = json.loads(data_serialized)
 
-                return JsonResponse({"success": "User has been logged in", "group": data_serialized})
-            return JsonResponse({"errors": "Invalid credentials"},status=400,)
+                # Generar tokens JWT
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+
+                # Devolver el token JWT en la respuesta
+                return JsonResponse({"access_token": access_token, "data_group": data_serialized})
+            else:
+                return JsonResponse({"errors": "Invalid credentials"}, status=400)
         else:
-            return JsonResponse({"errors": "User dont exists"},status=400,)
+            return JsonResponse({"errors": "User doesn't exist"}, status=400)
     else:
-        return JsonResponse({"error":"no data on body"},status=500)
+        return JsonResponse({"error": "No data in the request body"}, status=500)
 
 @api_view(['POST'])
-@permission_classes((AllowAny,))
+@permission_classes([AllowAny, HasAPIKey])
 def logout_user(request):
     logout(request)
     return JsonResponse({"exit": "logout success"},status=201)
