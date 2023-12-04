@@ -34,4 +34,4 @@ def saludo_private(request):
 def get_all_products(request):
     objects = Product.objects.all()
     serializer_class = ProductSerializer(objects, many=True)
-    return JsonResponse({"products":serializer_class.data},safe=False,status=200)
+    return JsonResponse(serializer_class.data,safe=False,status=200)
